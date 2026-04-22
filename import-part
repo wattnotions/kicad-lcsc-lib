@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+Usage:
+  ./import-part <LCSC_ID> [LCSC_ID ...]
+
+Imports one or more LCSC parts into this repository's KiCad library using
+easyeda2kicad. The library basename is fixed to "lcsc".
+
+Examples:
+  ./import-part C25804
+  ./import-part C25804 C223881
+EOF
+}
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  usage
+  exit 0
+fi
+
+if [[ "$#" -lt 1 ]]; then
+  usage >&2
+  exit 1
+fi
+
+if ! command -v easyeda2kicad >/dev/null 2>&1; then
+  echo "error: easyeda2kicad is not installed or not in PATH" >&2
+  exit 1
+fi
+
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+output_path="${script_dir}/lcsc.kicad_sym"
+
+echo "Importing into ${output_path}"
+easyeda2kicad \
+  --full \
+  --lcsc_id "$@" \
+  --output "${output_path}" \
+  --overwrite
